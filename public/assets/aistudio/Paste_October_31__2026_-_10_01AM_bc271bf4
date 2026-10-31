@@ -1,0 +1,1100 @@
+# BYTE — PHASE 4 MASTER PROMPT
+# COMPLETE BACKEND, DATABASE, API AND DATA MANAGEMENT IMPLEMENTATION
+
+You are now responsible for implementing the backend infrastructure of BYTE, an existing smart campus food-services platform.
+
+BYTE already has an established frontend, visual identity, navigation, menu layouts, login interface, outlet pages and multiple user-facing screens.
+
+The existing frontend is working reasonably well. The purpose of this phase is to transform BYTE from a primarily frontend-driven application into a genuinely functional, database-driven full-stack application.
+
+This is a substantial engineering task.
+
+Your highest priorities are:
+
+1. Preserve the existing frontend.
+2. Build a reliable backend.
+3. Establish a properly structured relational database.
+4. Connect every relevant frontend feature to real backend APIs.
+5. Implement authentication and permissions.
+6. Implement genuine CRUD operations.
+7. Make orders and table reservations persist correctly.
+8. Ensure that errors, missing data and failed API requests never crash the application.
+
+Do not sacrifice reliability to implement features quickly.
+
+---
+
+# PART A — ABSOLUTE DEVELOPMENT RULES
+
+## A1. Preserve the existing application
+
+DO NOT:
+
+- Rebuild BYTE from scratch.
+- Replace the existing frontend with a generic dashboard.
+- Remove existing pages.
+- Remove existing components.
+- Change the approved design unnecessarily.
+- Replace working authentication without investigating it.
+- Replace existing menus with hardcoded demonstration data.
+- Remove existing functionality to simplify backend integration.
+- Delete existing database files or migrations without justification.
+
+The existing UI/UX is the foundation of this project.
+
+Connect the existing interface to the backend wherever possible.
+
+If a component needs modification, preserve its appearance and behaviour unless a change is technically necessary.
+
+## A2. Inspect before implementing
+
+Before writing code, inspect the complete GitHub repository.
+
+Identify:
+
+- Frontend framework.
+- Programming language.
+- Existing application architecture.
+- Existing routes.
+- Existing authentication.
+- Existing state management.
+- Existing menu and outlet data.
+- Existing API integrations.
+- Existing environment variables.
+- Existing database configuration.
+- Existing deployment configuration.
+- Existing error boundaries.
+- Existing TypeScript interfaces and data models.
+
+Create a file named PHASE_4_IMPLEMENTATION_PLAN.md.
+
+Record the existing architecture, planned backend architecture, files requiring modification and implementation sequence.
+
+Do not assume that the repository uses a particular framework without verifying it.
+
+## A3. Work in controlled implementation stages
+
+Divide Phase 4 into these checkpoints:
+
+CHECKPOINT 1 — Repository inspection and backend foundation.
+
+CHECKPOINT 2 — Database models and migrations.
+
+CHECKPOINT 3 — Authentication and role-based permissions.
+
+CHECKPOINT 4 — Outlet and menu APIs.
+
+CHECKPOINT 5 — Frontend API integration and data normalisation.
+
+CHECKPOINT 6 — Cart and order management.
+
+CHECKPOINT 7 — Table reservation management.
+
+CHECKPOINT 8 — Admin and vendor CRUD operations.
+
+CHECKPOINT 9 — CSV imports and data validation.
+
+CHECKPOINT 10 — Integration testing and documentation.
+
+Complete and validate each checkpoint before proceeding.
+
+Do not implement ten incomplete features simultaneously.
+
+After each checkpoint:
+
+- Run relevant tests.
+- Check imports and dependencies.
+- Check for incomplete files.
+- Verify database compatibility.
+- Verify API contracts.
+- Record completed work.
+- Identify remaining work.
+
+If a checkpoint fails, stop and fix it before proceeding.
+
+Never report a failed checkpoint as complete.
+
+---
+
+# PART B — BACKEND ARCHITECTURE
+
+## B1. Preferred technology stack
+
+Use the following architecture if compatible with the existing project:
+
+Backend:
+- Python.
+- FastAPI.
+- Pydantic.
+- SQLAlchemy 2.0.
+- Alembic.
+
+Database:
+- PostgreSQL for production.
+- SQLite may be used for local development and initial testing, provided the models and migrations remain compatible with PostgreSQL.
+
+Authentication:
+- Secure HTTP-only cookie-based sessions or an appropriately secured JWT-backed session architecture.
+- Argon2 password hashing.
+
+Communication:
+- REST APIs.
+- WebSockets for real-time order updates where appropriate.
+
+Frontend:
+- Preserve the existing framework.
+- Use the existing API and state-management libraries where suitable.
+- Introduce a central API client if one does not already exist.
+
+Do not introduce a second competing backend or database.
+
+If the existing project already has an equivalent working technology, evaluate whether it should be retained instead.
+
+## B2. Modular architecture
+
+Organise the backend into logical modules.
+
+Suggested structure:
+
+backend/
+  app/
+    main.py
+    config.py
+    database.py
+    models/
+    schemas/
+    routers/
+    services/
+    repositories/
+    middleware/
+    dependencies/
+    utils/
+  migrations/
+  tests/
+  requirements.txt
+  .env.example
+
+Separate:
+
+- Database models.
+- Request and response schemas.
+- Business logic.
+- API routing.
+- Authentication.
+- Database access.
+- Configuration.
+
+Do not put all backend functionality into one enormous file.
+
+Keep modules maintainable and independently testable.
+
+---
+
+# PART C — DATABASE DESIGN
+
+Create a relational PostgreSQL database with proper relationships, constraints, indexes and timestamps.
+
+The database must support the following entities.
+
+## C1. Campuses
+
+Fields:
+
+- id
+- name
+- campus_code
+- location
+- status
+- created_at
+
+Initial campus: DJSCE.
+
+Keep the architecture extensible for multiple campuses in the future.
+
+## C2. Users
+
+Fields:
+
+- id
+- full_name
+- email
+- phone
+- password_hash
+- campus_id
+- user_category
+- operational_role
+- account_status
+- created_at
+- updated_at
+
+User categories:
+
+- STUDENT
+- FACULTY
+- NON_TEACHING_STAFF
+
+Operational roles:
+
+- USER
+- ADMIN
+- VENDOR
+- OUTLET_STAFF
+
+User category and operational role are separate concepts.
+
+A student must not automatically receive administrative permissions.
+
+Use unique email addresses and appropriate validation.
+
+## C3. Outlets
+
+Fields:
+
+- id
+- campus_id
+- outlet_name
+- description
+- location
+- opening_time
+- closing_time
+- outlet_status
+- vendor_owner_id
+- created_at
+- updated_at
+
+Each outlet operates independently.
+
+A vendor should only manage authorised outlets.
+
+## C4. Outlet staff
+
+Fields:
+
+- id
+- outlet_id
+- user_id
+- staff_role
+- status
+- created_at
+
+## C5. Menu categories
+
+Fields:
+
+- id
+- outlet_id
+- category_name
+- description
+- display_order
+- is_active
+- created_at
+
+## C6. Menu items
+
+Fields:
+
+- id
+- outlet_id
+- category_id
+- item_name
+- description
+- price
+- image_url
+- food_type
+- dietary_tags
+- allergens
+- preparation_time
+- availability_status
+- stock_quantity
+- display_order
+- created_at
+- updated_at
+
+Support:
+
+- Vegetarian.
+- Non-vegetarian.
+- Jain where applicable.
+
+Do not fabricate nutritional claims, ingredient certifications or health information.
+
+## C7. Orders
+
+Fields:
+
+- id
+- order_number
+- user_id
+- outlet_id
+- subtotal
+- taxes
+- discounts
+- total_amount
+- payment_status
+- order_status
+- pickup_token
+- created_at
+- updated_at
+
+Each order belongs to exactly one outlet.
+
+## C8. Order items
+
+Fields:
+
+- id
+- order_id
+- menu_item_id
+- item_name_snapshot
+- unit_price_snapshot
+- quantity
+- selected_options
+- item_total
+
+Store the item name and price at the time of ordering.
+
+Historical orders must not change when menu prices are updated.
+
+## C9. Payments
+
+Fields:
+
+- id
+- order_id
+- payment_provider
+- payment_reference
+- amount
+- payment_method
+- payment_status
+- created_at
+
+Initial release:
+
+- Sandbox UPI-style payment integration only.
+
+Never store card credentials, UPI PINs or sensitive payment credentials.
+
+Do not create a real stored-value wallet or RFID balance system without a properly approved payment provider and appropriate regulatory review.
+
+## C10. Reservations
+
+Fields:
+
+- id
+- reservation_number
+- user_id
+- outlet_id
+- table_id where applicable
+- reservation_date
+- start_time
+- end_time
+- party_size
+- reservation_status
+- created_at
+- updated_at
+
+Create a separate outlet_tables entity if the existing UI uses individual tables.
+
+Support the existing 15–20-minute reservation concept where applicable.
+
+Prevent overlapping bookings and double reservations.
+
+## C11. Reviews
+
+Fields:
+
+- id
+- user_id
+- outlet_id
+- order_id
+- rating
+- review_text
+- created_at
+
+Only eligible completed orders should qualify for reviews.
+
+## C12. Media assets
+
+Fields:
+
+- id
+- outlet_id
+- media_type
+- media_url
+- thumbnail_url
+- alt_text
+- title
+- duration_seconds
+- created_at
+
+Store media references and metadata in PostgreSQL.
+
+Store actual images and videos in appropriate external media/object storage.
+
+Do not store large video files directly in database rows.
+
+---
+
+# PART D — DATABASE RELATIONSHIPS AND INTEGRITY
+
+Implement the following rules.
+
+1. One campus can have multiple outlets.
+2. One outlet can have multiple categories.
+3. One category can have multiple menu items.
+4. One user can place multiple orders.
+5. One order belongs to exactly one outlet.
+6. One order contains one or more order items.
+7. One vendor can manage their assigned outlets.
+8. Outlet staff can access only authorised outlet operations.
+9. Administrators can manage campus-wide operations.
+10. Reservations must respect table or outlet capacity.
+11. Stock cannot become negative.
+12. Prices cannot be negative.
+13. Invalid order state transitions must be rejected.
+
+Use foreign keys, unique constraints, transactions and indexes.
+
+Use database transactions for order creation, payment-state updates and reservations.
+
+Use appropriate concurrency protection to prevent two users from reserving the same table or purchasing unavailable stock simultaneously.
+
+---
+
+# PART E — AUTHENTICATION AND AUTHORISATION
+
+Preserve the existing login UI wherever possible.
+
+Implement:
+
+- Login.
+- Logout.
+- Secure session management.
+- Password hashing.
+- Account activation.
+- Password reset flow.
+- Session expiry.
+- Role-based permissions.
+- Outlet-specific permissions.
+
+Registration must be admin-controlled initially.
+
+Do not allow unrestricted public account creation unless explicitly enabled by the administrator.
+
+All protected API operations must verify permissions on the backend.
+
+Never rely on frontend button visibility as a security mechanism.
+
+Ensure that:
+
+- Customers can only view their own orders and reservations.
+- Vendors can only manage assigned outlets.
+- Outlet staff can perform authorised outlet operations.
+- Admins can manage the platform.
+
+Protect against insecure direct object references and unauthorised record access.
+
+---
+
+# PART F — API DEVELOPMENT
+
+Create a consistent REST API structure.
+
+Suggested endpoints:
+
+/api/auth
+/api/users
+/api/campuses
+/api/outlets
+/api/categories
+/api/menu-items
+/api/cart
+/api/orders
+/api/payments
+/api/reservations
+/api/reviews
+/api/media
+/api/admin
+/api/vendor
+
+Implement appropriate GET, POST, PATCH and DELETE operations.
+
+Use Pydantic request and response schemas.
+
+Validate every incoming request.
+
+Use consistent response formats and correct HTTP status codes.
+
+Document all endpoints.
+
+## F1. Critical API response contract
+
+This is a mandatory requirement.
+
+The previous implementation experienced the following frontend crash:
+
+```text
+TypeError: allFoods.filter is not a function
+```
+
+This happened because the frontend expected an array but received a different data type.
+
+Prevent this class of failure throughout the application.
+
+Establish explicit API response contracts.
+
+For example, use a consistent structure:
+
+```json
+{
+  "success": true,
+  "data": [],
+  "message": null
+}
+```
+
+For paginated responses:
+
+```json
+{
+  "success": true,
+  "data": [],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 0
+  },
+  "message": null
+}
+```
+
+These are proposed contracts. Apply them consistently and document them.
+
+Every endpoint must have an explicit response schema.
+
+Never allow an endpoint to unpredictably return an array in one situation and an object in another.
+
+Error responses must follow a documented structure too.
+
+Do not return HTML error pages or raw database exceptions to the frontend.
+
+---
+
+# PART G — FRONTEND DATA SAFETY
+
+This section is mandatory.
+
+The existing BYTE frontend must never crash because an API returns missing, null or incorrectly structured data.
+
+## G1. Array safety
+
+Every piece of frontend state representing a collection must be initialised as an array.
+
+Examples:
+
+- allFoods
+- outlets
+- categories
+- orders
+- reservations
+- reviews
+- users
+
+Do not initialise collection state as undefined or null.
+
+## G2. API response validation
+
+Create a central response normalisation and validation layer.
+
+Before assigning API data to React state:
+
+1. Check that the request succeeded.
+2. Check that the response has the expected structure.
+3. Check that collection fields are arrays.
+4. Validate required object properties.
+5. Handle null and missing optional values.
+6. Report unexpected response formats.
+7. Avoid overwriting valid state with invalid data.
+
+Do not blindly assume that response.data is an array.
+
+Do not blindly assume that response.items exists.
+
+Use the actual documented API response contract.
+
+## G3. Unsafe JavaScript operations
+
+Audit the application for unsafe uses of:
+
+- .filter()
+- .map()
+- .find()
+- .reduce()
+- .split()
+- .toLowerCase()
+- .toUpperCase()
+- Object.keys()
+- Object.values()
+
+Validate the input before applying these operations.
+
+Examples of defensive handling:
+
+```typescript
+const safeFoods = Array.isArray(allFoods) ? allFoods : [];
+```
+
+```typescript
+const safeName =
+  typeof item?.name === "string" ? item.name : "";
+```
+
+Do not use these examples as superficial replacements for fixing incorrect API data.
+
+Find and correct the underlying data-contract problem.
+
+Use proper TypeScript types rather than spreading `any` throughout the project.
+
+## G4. Asynchronous state handling
+
+Handle:
+
+- Initial loading.
+- Successful retrieval.
+- Empty responses.
+- Failed requests.
+- Authentication expiry.
+- Network interruptions.
+- Unexpected response formats.
+
+Ensure that stale asynchronous requests cannot overwrite newer valid data.
+
+Use the existing query/state-management solution where suitable.
+
+---
+
+# PART H — OUTLET AND MENU CRUD
+
+Connect the existing menu and outlet interfaces to real backend operations.
+
+## H1. Outlet operations
+
+Implement:
+
+- Create outlet.
+- Read outlet details.
+- Update outlet.
+- Deactivate outlet.
+- Update opening hours.
+- Update availability.
+- Assign vendors.
+- Assign outlet staff.
+
+## H2. Category operations
+
+Implement:
+
+- Create category.
+- Read categories.
+- Update category.
+- Reorder categories.
+- Deactivate category.
+- Delete category where permitted.
+
+## H3. Menu item operations
+
+Implement:
+
+- Create item.
+- Read items.
+- Update item.
+- Update price.
+- Update stock.
+- Change availability.
+- Update preparation time.
+- Upload food image.
+- Update dietary tags.
+- Delete or deactivate item.
+
+All changes must persist to PostgreSQL.
+
+Do not use localStorage as the primary data source.
+
+---
+
+# PART I — CART AND ORDER MANAGEMENT
+
+Implement a complete customer ordering workflow.
+
+## I1. Cart rules
+
+- Add menu items.
+- Remove menu items.
+- Change quantities.
+- Calculate totals.
+- Validate item availability.
+- Validate stock.
+- Persist cart appropriately.
+
+CRITICAL BUSINESS RULE:
+
+A cart can contain items from only one outlet.
+
+If a customer adds an item from another outlet while their cart contains items, ask whether they want to clear the existing cart and switch outlets.
+
+Do not silently combine different outlets.
+
+## I2. Order creation
+
+When the customer checks out:
+
+1. Verify authentication.
+2. Verify outlet availability.
+3. Retrieve current menu prices from the database.
+4. Verify item availability.
+5. Verify stock.
+6. Recalculate totals on the server.
+7. Apply valid taxes or charges.
+8. Create order and order items transactionally.
+9. Create the sandbox payment record.
+10. Generate a unique order number.
+11. Generate a secure pickup token.
+12. Return the confirmed order.
+
+Never trust the frontend to calculate or determine the final order price.
+
+Prevent duplicate orders using idempotency protection.
+
+## I3. Order status lifecycle
+
+Implement controlled transitions:
+
+PLACED → ACCEPTED → PREPARING → READY → COMPLETED
+
+Support appropriate cancellation and rejection states.
+
+Record:
+
+- Previous status.
+- New status.
+- Timestamp.
+- User or staff member responsible.
+
+Only authorised users may update order status.
+
+## I4. Pickup verification
+
+- Generate a unique pickup token.
+- Display the token to the customer.
+- Allow authorised outlet staff to verify it.
+- Prevent reuse.
+- Record successful verification.
+- Complete the order only after valid pickup verification.
+
+---
+
+# PART J — TABLE RESERVATION MANAGEMENT
+
+Connect the existing table reservation interface to real database operations.
+
+Implement:
+
+- Retrieve available dates.
+- Retrieve available slots.
+- Retrieve available tables or capacity.
+- Select date.
+- Select time.
+- Select party size.
+- Create reservation.
+- Retrieve reservation.
+- Cancel reservation.
+- View vendor reservations.
+- Update reservation status.
+
+CRITICAL:
+
+Availability must be calculated on the backend.
+
+Never trust a frontend availability display as proof that a table is available.
+
+Prevent overlapping bookings through transactional checks and appropriate database constraints or locking.
+
+Test concurrent reservation attempts.
+
+Two customers must never successfully reserve the same unavailable table for overlapping periods.
+
+---
+
+# PART K — ADMIN AND VENDOR MANAGEMENT
+
+## K1. Administrator
+
+Implement:
+
+- User creation.
+- User retrieval.
+- User editing.
+- User activation/deactivation.
+- Role assignment.
+- Outlet creation.
+- Outlet editing.
+- Vendor assignment.
+- Staff assignment.
+- Menu oversight.
+- Order monitoring.
+- Reservation monitoring.
+- CSV import.
+- Platform-wide overview.
+
+## K2. Vendor
+
+Implement:
+
+- Assigned outlet access.
+- Menu management.
+- Category management.
+- Price management.
+- Inventory management.
+- Availability management.
+- Incoming orders.
+- Order status updates.
+- Reservation management.
+- Staff management within authorised permissions.
+
+Every operation must be checked by backend permissions.
+
+---
+
+# PART L — CSV IMPORT SYSTEM
+
+CSV files are for initial data import, not for running the live application.
+
+Create admin-only import functionality.
+
+Support:
+
+- Users.
+- Outlets.
+- Categories.
+- Menu items.
+- Outlet staff.
+
+Implement:
+
+1. Upload.
+2. File-type validation.
+3. File-size validation.
+4. Header validation.
+5. Preview.
+6. Required-field validation.
+7. Duplicate detection.
+8. Price and quantity validation.
+9. Relationship validation.
+10. Import confirmation.
+11. Transactional import.
+12. Success and failure report.
+
+Do not import malformed or partially invalid records silently.
+
+Never execute spreadsheet formulas or interpret CSV contents as trusted instructions.
+
+---
+
+# PART M — ENVIRONMENT AND DEPLOYMENT CONFIGURATION
+
+Create a clear environment configuration.
+
+Provide an .env.example file containing placeholders only.
+
+Examples:
+
+DATABASE_URL=
+SECRET_KEY=
+CORS_ORIGINS=
+APP_ENV=
+CAMPUS_NAME=
+MEDIA_STORAGE_PROVIDER=
+
+Never commit actual credentials.
+
+Do not hardcode production database URLs, passwords or API keys.
+
+Configure CORS explicitly for the real frontend origin.
+
+Support separate development and production configuration.
+
+If Google AI Studio cannot host the backend directly, prepare the backend as an independent deployable service.
+
+Do not pretend that a local backend or local database is publicly accessible.
+
+---
+
+# PART N — TESTING AND FAILURE PREVENTION
+
+Testing is mandatory.
+
+Do not merely create test files. Run them and report actual results.
+
+## N1. Backend tests
+
+Test:
+
+- Application startup.
+- Database connection.
+- Database migrations.
+- User creation.
+- Login.
+- Logout.
+- Role permissions.
+- Outlet creation.
+- Menu creation.
+- Menu retrieval.
+- Menu updates.
+- Order creation.
+- Duplicate checkout prevention.
+- Stock validation.
+- Reservation creation.
+- Reservation conflicts.
+- CSV validation.
+
+## N2. Frontend tests
+
+Test:
+
+- Homepage loads with an empty menu.
+- Homepage loads with populated menu data.
+- Homepage handles API failure.
+- Homepage handles malformed API responses.
+- Menu filtering works.
+- Search works.
+- Outlet switching works.
+- Cart operations work.
+- Checkout errors are displayed properly.
+- Reservation forms handle errors.
+- Loading states display correctly.
+
+## N3. Type safety
+
+Run the project's type checker.
+
+Resolve TypeScript errors.
+
+Do not suppress errors using broad `any` types or excessive type assertions.
+
+## N4. Error boundaries
+
+Implement safe application-level error boundaries.
+
+An API failure must not crash the entire application.
+
+An individual page error should not unnecessarily destroy the entire website.
+
+Log useful development diagnostics without exposing sensitive information to users.
+
+## N5. Regression testing
+
+After backend integration, verify that:
+
+- Existing navigation still works.
+- Existing UI components still work.
+- Login remains functional.
+- All existing routes load.
+- Light and dark themes remain functional if already implemented.
+- Responsive layouts remain intact.
+- Existing food imagery remains intact.
+
+---
+
+# PART O — IMPLEMENTATION AND RECOVERY RULES
+
+These instructions are particularly important because the previous implementation encountered errors and Google AI Studio exhausted its generation quota.
+
+1. Never modify dozens of unrelated files in one uncontrolled operation.
+2. Work checkpoint by checkpoint.
+3. Preserve completed checkpoints.
+4. Validate imports after creating or modifying modules.
+5. Run migrations before testing database-dependent endpoints.
+6. Validate the backend before connecting the frontend.
+7. Validate the API response before updating frontend state.
+8. Never invent a successful database response.
+9. Never hide an exception by returning fake data.
+10. Never continue after a critical failure without diagnosing it.
+11. Do not overwrite existing working authentication.
+12. Do not delete database records during debugging.
+13. Do not reset migrations to fix unrelated frontend errors.
+14. Do not change security settings simply to suppress development warnings.
+15. Do not claim a feature works without testing it.
+
+If generation is interrupted by a quota limit:
+
+- Preserve the current implementation.
+- Record the last completed checkpoint.
+- Record the files modified.
+- Record any incomplete operations.
+- Do not restart from the beginning.
+- Resume from the last verified checkpoint.
+
+Create a persistent file named PHASE_4_PROGRESS.md.
+
+Update it after each checkpoint with:
+
+- Completed work.
+- Files changed.
+- Tests executed.
+- Test results.
+- Outstanding issues.
+- Exact next action.
+
+This file must make it possible to resume development in a new session or account without losing track of implementation progress.
+
+---
+
+# PART P — FINAL DELIVERABLES
+
+Create and maintain:
+
+- PHASE_4_IMPLEMENTATION_PLAN.md
+- PHASE_4_PROGRESS.md
+- DATABASE_SCHEMA.md
+- API_DOCUMENTATION.md
+- DATABASE_SETUP.md
+- BACKEND_ARCHITECTURE.md
+- CSV_IMPORT_GUIDE.md
+- PHASE_4_TEST_REPORT.md
+
+At the end, provide a factual report identifying:
+
+1. Backend technology implemented.
+2. Database technology implemented.
+3. Database connection status.
+4. Migrations completed.
+5. Authentication status.
+6. CRUD functionality completed.
+7. Menu and outlet integration status.
+8. Cart and checkout integration status.
+9. Reservation integration status.
+10. Admin and vendor functionality status.
+11. Tests actually executed.
+12. Tests passed and failed.
+13. Remaining issues.
+14. External services still requiring configuration.
+
+Use these classifications:
+
+- COMPLETE AND TESTED.
+- IMPLEMENTED BUT NOT FULLY TESTED.
+- PARTIALLY IMPLEMENTED.
+- NOT IMPLEMENTED.
+- BLOCKED BY EXTERNAL CONFIGURATION.
+
+Never mark a feature COMPLETE AND TESTED unless the implementation has actually been verified.
+
+# FINAL INSTRUCTION
+
+BYTE is an existing, carefully developed product. Your responsibility is to strengthen its technical foundation without destroying its existing design and functionality.
+
+Prioritise data integrity, security, stable API contracts, reliable database operations and maintainable code.
+
+A smaller, fully functional implementation is better than a large, broken implementation.
+
+Begin with repository inspection and CHECKPOINT 1. Continue through the checkpoints only after validating each one.

@@ -1,11 +1,47 @@
-<div align="center">
+# BYTE — Campus Food OS
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+A modular-monolith starter for the BYTE campus food-services platform.
 
-  <h1>Built with AI Studio</h2>
+## Current implementation
+- React + TypeScript + Vite frontend.
+- FastAPI + SQLAlchemy backend.
+- PostgreSQL-ready database configuration (SQLite fallback for zero-friction local development).
+- Admin-provisioned demo accounts, role-aware login, outlet/menu CRUD, outlet-scoped carts, sandbox checkout and order status progression.
+- Original recovered Stitch screens retained under `reference/stitch/` for visual reference.
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+## Run locally
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+### Backend
+```bash
+cd backend
+python -m venv .venv
+# Windows: .venv\\Scripts\\activate
+# macOS/Linux: source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+alembic upgrade head
+python -m app.seed
+uvicorn app.main:app --reload
+```
+API: http://localhost:8000 · Docs: http://localhost:8000/docs
 
-</div>
+### Frontend
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Frontend: http://localhost:5173
+
+## Demo accounts
+The seed command creates local-only demo accounts (change passwords before any shared deployment):
+- Admin: `admin@example.com` / `ByteAdmin123!`
+- Vendor — Dabba Lab: `vendor@example.com` / `ByteVendor123!`
+- Vendor — Tiffin Express: `vendor.tiffin@example.com` / `ByteVendor123!`
+- Vendor — Chai & Crumb: `vendor.chai@example.com` / `ByteVendor123!`
+- Student: `student@example.com` / `ByteStudent123!`
+
+Run `python -m app.seed` from `backend/` after installing dependencies.
+
+## Important
+Payments are sandbox-only. No real money is collected. The wallet/PPI structure requires institutional and payment-partner review before real-money functionality. Demo menu prices and records are synthetic.

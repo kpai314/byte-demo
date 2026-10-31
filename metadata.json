@@ -1,0 +1,7 @@
+{
+  "name": "BYTE — Campus Food OS",
+  "description": "Campus food ordering and kitchen management platform for campus outlets, students, and staff.",
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
